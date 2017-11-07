@@ -1,0 +1,4 @@
+public interface AdminVisitor{
+    public void VisitMessages( UserUser user );
+    public void VisitPositive( UserUser user );
+}
