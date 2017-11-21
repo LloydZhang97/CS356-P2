@@ -9,4 +9,6 @@ public interface TweetObserverVisitable{
     public void AcceptMessages( AdminVisitor visitor );
 
     public void AcceptPositive( AdminVisitor visitor );
+
+    public void AcceptLastUpdate( AdminVisitor visitor );
 }

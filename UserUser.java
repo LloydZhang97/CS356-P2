@@ -2,6 +2,7 @@ import java.util.*;
 import javax.swing.*;
 
 public class UserUser extends User{
+    private long lastUpdateTime;
     private ArrayList<String> myTweets;
     private ArrayList<TweetObserverVisitable> followers;
     private DefaultListModel<UserUser> following;
@@ -9,6 +10,7 @@ public class UserUser extends User{
 
     public UserUser( String id ){
         super( id );
+        lastUpdateTime = GetCreationTime();
         following = new DefaultListModel<UserUser>();
         followers = new ArrayList<TweetObserverVisitable>();
         myTweets = new ArrayList<String>();
@@ -36,6 +38,7 @@ public class UserUser extends User{
     }
 
     public void Update( String tweet ){
+        lastUpdateTime = System.currentTimeMillis();
         tweetFeed.addElement( tweet );
     }
 
@@ -51,11 +54,19 @@ public class UserUser extends User{
         return myTweets;
     }
 
+    public long GetLastUpdate(){
+        return lastUpdateTime;
+    }
+
     public void AcceptMessages( AdminVisitor visitor ){
         visitor.VisitMessages( this );
     }
 
     public void AcceptPositive( AdminVisitor visitor ){
         visitor.VisitPositive( this );
+    }
+
+    public void AcceptLastUpdate( AdminVisitor visitor ){
+        visitor.VisitLastUpdate( this );
     }
 }

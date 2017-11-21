@@ -14,11 +14,13 @@ public class AdminMan implements ActionListener,AdminVisitor{
     private HashMap<String,TweetObserverVisitable> users;
     private User selectedUser;
     private int totalMessages, userNum, groupNum, positiveTotal;
+    private long lastUpdateTime;
+    private String lastUpdateId;
 
     private JFrame mainFrame;
     private JTextArea consoleOutput;
     private JTextField userIdInput, groupIdInput;
-    private JButton userIdButton, groupIdButton, openUserButton, userTotalButton, groupTotalButton, messageTotalButton, positivePerButton;
+    private JButton userIdButton, groupIdButton, openUserButton, userTotalButton, groupTotalButton, messageTotalButton, positivePerButton, idVerificationButton, lastUpdateButton;
     private JTree userList;
     private DefaultTreeModel userListModel;
 
@@ -29,7 +31,7 @@ public class AdminMan implements ActionListener,AdminVisitor{
 
         mainFrame = new JFrame( "Admin Manager" );
         consoleOutput = new JTextArea( "Welcome to the Admin Manager for Mini-Twitter!\n" );
-        consoleOutput.setBounds( 405, 100, 370, 290 );
+        consoleOutput.setBounds( 405, 100, 370, 260 );
         mainFrame.add( consoleOutput );
         userIdInput = new JTextField( "UserId" );
         groupIdInput = new JTextField( "GroupId" );
@@ -46,13 +48,17 @@ public class AdminMan implements ActionListener,AdminVisitor{
         groupTotalButton = new JButton( "Show Group Total" );
         messageTotalButton = new JButton( "Show Messages Total" );
         positivePerButton = new JButton( "Show Positive Percentage" );
+        idVerificationButton = new JButton( "Validate All Id's" );
+        lastUpdateButton = new JButton( "Get Last User Update" );
         userIdButton.setBounds( 675, 10, 100, 20 );
         groupIdButton.setBounds( 675, 40, 100, 20 );
         openUserButton.setBounds( 405, 70, 370, 20 );
-        userTotalButton.setBounds( 405, 400, 180, 20 );
-        groupTotalButton.setBounds( 595, 400, 180, 20 );
-        messageTotalButton.setBounds( 405, 430, 180, 20 );
-        positivePerButton.setBounds( 595, 430, 180, 20 );
+        userTotalButton.setBounds( 405, 370, 180, 20 );
+        groupTotalButton.setBounds( 595, 370, 180, 20 );
+        messageTotalButton.setBounds( 405, 400, 180, 20 );
+        positivePerButton.setBounds( 595, 400, 180, 20 );
+        idVerificationButton.setBounds( 405, 430, 180, 20 );
+        lastUpdateButton.setBounds( 595, 430, 180, 20 );
         userIdButton.addActionListener( this );
         groupIdButton.addActionListener( this );
         openUserButton.addActionListener( this );
@@ -60,6 +66,8 @@ public class AdminMan implements ActionListener,AdminVisitor{
         groupTotalButton.addActionListener( this );
         messageTotalButton.addActionListener( this );
         positivePerButton.addActionListener( this );
+        idVerificationButton.addActionListener( this );
+        lastUpdateButton.addActionListener( this );
         mainFrame.add( userIdButton );
         mainFrame.add( groupIdButton );
         mainFrame.add( openUserButton );
@@ -67,6 +75,8 @@ public class AdminMan implements ActionListener,AdminVisitor{
         mainFrame.add( groupTotalButton );
         mainFrame.add( messageTotalButton );
         mainFrame.add( positivePerButton );
+        mainFrame.add( idVerificationButton );
+        mainFrame.add( lastUpdateButton );
         root = new GroupUser( "root" );
         selectedUser = root;
         userList = new JTree( root );
@@ -122,6 +132,16 @@ public class AdminMan implements ActionListener,AdminVisitor{
         consoleOutput.update( consoleOutput.getGraphics() );
     }
 
+    public void GetLastUserUpdate(){
+        lastUpdateId = "";
+        lastUpdateTime = Long.MAX_VALUE;
+        for( TweetObserverVisitable user: users.values() ){
+            user.AcceptLastUpdate( this );
+        }
+        consoleOutput.append( "Last Update User: " + lastUpdateId );
+        consoleOutput.update( consoleOutput.getGraphics() );
+    }
+
     public void VisitMessages( UserUser user ){
         totalMessages += user.GetMyTweets().size();
     }
@@ -137,6 +157,22 @@ public class AdminMan implements ActionListener,AdminVisitor{
                 }
             }
         }
+    }
+
+    public void VisitLastUpdate( UserUser user ){
+        if( user.GetLastUpdate() < lastUpdateTime ){
+            lastUpdateId = user.GetId();
+        }
+    }
+
+    public boolean validateUsers(){
+        Set<String> names = users.keySet();
+        for( String name: names ){
+            if( name.indexOf( " " ) != -1 ){
+                return false;
+            }
+        }
+        return true;
     }
 
     public void actionPerformed( ActionEvent e ){
@@ -169,7 +205,9 @@ public class AdminMan implements ActionListener,AdminVisitor{
         }
         else if( e.getSource() == openUserButton ){
             try{
-                UserView newUserview = new UserView( (UserUser)userList.getLastSelectedPathComponent(), this );
+                UserUser user = (UserUser)userList.getLastSelectedPathComponent();
+                System.out.println( user.GetId() + " created at " + user.GetCreationTime() + "\n" );
+                UserView newUserview = new UserView( user, this );
             } catch ( Exception ex ){}
         }
         else if( e.getSource() == userTotalButton ){
@@ -184,6 +222,18 @@ public class AdminMan implements ActionListener,AdminVisitor{
         else if( e.getSource() == positivePerButton ){
             GetPositiveTotal();
         }
-
+        else if( e.getSource() == idVerificationButton ){
+            if( validateUsers() ){
+                consoleOutput.append( "All users are valid!\n" );
+                consoleOutput.update( consoleOutput.getGraphics() );
+            }
+            else{
+                consoleOutput.append( "One or more users are not valid!\n" );
+                consoleOutput.update( consoleOutput.getGraphics() );
+            }
+        }
+        else if( e.getSource() == lastUpdateButton ){
+            GetLastUserUpdate();
+        }
     }
 }
